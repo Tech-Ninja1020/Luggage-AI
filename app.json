@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "luggage-ai",
+    "name": "Luggage AI",
     "slug": "luggage-ai",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -17,7 +17,8 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.luggageai.app"
     },
     "web": {
       "output": "static",
@@ -34,11 +35,24 @@
             "imageWidth": 76
           }
         }
+      ],
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.454270158398-ret63n9qkamh2ig1rsr50gdfu1mg0g48"
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e42913b5-596d-4c69-bc24-5424dea8807e"
+      }
+    },
+    "owner": "0xpaladin"
   }
 }

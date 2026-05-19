@@ -54,3 +54,12 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+
+## About project
+
+Welcome to Luggage AI — your intelligent travel packing companion designed to eliminate the stress of trip preparation. Luggage AI combines AI-powered outfit planning, smart packing checklists, and airline baggage guidance into one seamless experience, helping travelers pack confidently, efficiently, and without surprises.
+
+Simply enter your destination, trip dates, and planned activities, and Luggage AI generates personalized outfit recommendations tailored to your travel style, weather, and occasions. As you pack, interactive checklists keep every item organized so nothing gets left behind.
+
+Built for frequent travelers who value convenience, organization, and style, Luggage AI transforms chaotic pre-trip planning into a fast, effortless workflow — saving time, reducing overpacking, and helping users avoid unexpected baggage fees before they even leave home.

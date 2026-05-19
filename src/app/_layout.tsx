@@ -1,16 +1,22 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import '@/global.css';
+import '@/lib/icons/setup';
+
+import { ThemeProvider } from '@react-navigation/native';
+import { PortalHost } from "@rn-primitives/portal";
+import { Stack } from 'expo-router';
 import React from 'react';
 import { useColorScheme } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+import { NAV_THEME } from '@/lib/theme';
 
-export default function TabLayout() {
+export default function RootLayout() {
   const colorScheme = useColorScheme();
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={NAV_THEME[colorScheme as 'light' | 'dark']}>
       <AnimatedSplashOverlay />
-      <AppTabs />
+      <Stack />
+      <PortalHost />
     </ThemeProvider>
   );
 }
