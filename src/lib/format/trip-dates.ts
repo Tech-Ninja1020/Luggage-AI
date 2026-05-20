@@ -39,7 +39,6 @@ export function dateToISODateString(date: Date): string {
 /** Friendly label for date picker fields. */
 export function formatPickerDate(date: Date): string {
   return new Intl.DateTimeFormat(undefined, {
-    weekday: "short",
     month: "short",
     day: "numeric",
     year: "numeric",

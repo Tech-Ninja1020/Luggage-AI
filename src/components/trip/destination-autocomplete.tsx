@@ -2,6 +2,7 @@ import { MapPin } from "lucide-react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Platform,
   Pressable,
   ScrollView,
   TextInput,
@@ -39,6 +40,7 @@ export function DestinationAutocomplete({
   const [resolving, setResolving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -49,21 +51,31 @@ export function DestinationAutocomplete({
 
   const search = useCallback(async (text: string) => {
     abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
 
-    if (!text.trim() || text.trim().length < 2) {
+    const trimmed = text.trim();
+
+    if (!trimmed || trimmed.length < 2) {
       setPredictions([]);
       setLoading(false);
       setError(null);
+      setOpen(false);
       return;
     }
 
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setLoading(true);
+
     const { predictions: next, error: err } = await fetchPlacePredictions(
-      text,
+      trimmed,
       controller.signal
     );
+
+    if (controller.signal.aborted) {
+      return;
+    }
+
     setLoading(false);
     setPredictions(next);
     setError(err);
@@ -74,11 +86,19 @@ export function DestinationAutocomplete({
     if (value && query === value.formattedAddress) {
       return;
     }
+
     const timer = setTimeout(() => {
       void search(query);
     }, 320);
+
     return () => clearTimeout(timer);
   }, [query, search, value]);
+
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, []);
 
   const onSelectPrediction = async (placeId: string, description: string) => {
     setOpen(false);
@@ -88,6 +108,7 @@ export function DestinationAutocomplete({
     setQuery(description);
 
     const { destination, error: err } = await fetchPlaceDetails(placeId);
+
     setResolving(false);
 
     if (err || !destination) {
@@ -102,9 +123,11 @@ export function DestinationAutocomplete({
 
   const onQueryChange = (text: string) => {
     setQuery(text);
+
     if (value && text !== value.formattedAddress) {
       onChange(null);
     }
+
     setOpen(text.trim().length >= 2);
   };
 
@@ -113,33 +136,46 @@ export function DestinationAutocomplete({
   return (
     <View className="gap-2">
       <View className="relative z-20">
-        <View className="pointer-events-none absolute left-3 top-3.5 z-10">
-          <Icon as={MapPin} size={18} className="text-muted-foreground" />
-        </View>
-        <TextInput
-          nativeID={labelId}
-          accessibilityLabel="Destination search"
-          placeholder={
-            configured ? "Search city or destination…" : "Configure Places API key"
-          }
-          value={query}
-          onChangeText={onQueryChange}
-          onFocus={() => {
-            if (predictions.length > 0) setOpen(true);
-          }}
-          editable={!disabled && configured}
-          autoCapitalize="words"
-          autoCorrect={false}
+        <View
           className={cn(
-            "dark:bg-input/30 border-input bg-background text-foreground h-12 w-full rounded-xl border pl-10 pr-10 text-base shadow-sm shadow-black/5",
+            "dark:bg-input/30 border-input bg-background h-12 w-full flex-row items-center rounded-xl border pl-3 pr-3 shadow-sm shadow-black/5",
             disabled || !configured ? "opacity-60" : ""
           )}
-        />
-        {(loading || resolving) && (
-          <View className="absolute right-3 top-3.5">
+        >
+          <Icon as={MapPin} size={18} className="text-muted-foreground" />
+
+          <TextInput
+            nativeID={labelId}
+            accessibilityLabel="Destination search"
+            placeholder={
+              configured
+                ? "Search city or destination…"
+                : "Configure Places API key"
+            }
+            value={query}
+            onChangeText={onQueryChange}
+            onFocus={() => {
+              if (predictions.length > 0) {
+                setOpen(true);
+              }
+            }}
+            editable={!disabled && configured}
+            autoCapitalize="words"
+            autoCorrect={false}
+            className="text-foreground min-h-0 flex-1 px-2.5 py-0 text-base leading-5"
+            style={
+              Platform.OS === "android"
+                ? { includeFontPadding: false }
+                : undefined
+            }
+          />
+
+          {loading || resolving ? (
             <ActivityIndicator size="small" />
-          </View>
-        )}
+          ) : (
+            <View className="size-5" />
+          )}
+        </View>
       </View>
 
       {!configured ? (
@@ -148,13 +184,12 @@ export function DestinationAutocomplete({
           <Text className="font-medium text-muted-foreground">
             EXPO_PUBLIC_GOOGLE_PLACES_API_KEY
           </Text>{" "}
-          in your `.env` (Places API + Place Details enabled in Google Cloud).
+          in your .env file. Places API and Place Details must be enabled in
+          Google Cloud.
         </Text>
       ) : null}
 
-      {error ? (
-        <Text className="text-destructive text-xs">{error}</Text>
-      ) : null}
+      {error ? <Text className="text-destructive text-xs">{error}</Text> : null}
 
       {open && predictions.length > 0 ? (
         <View className="border-border/80 bg-card overflow-hidden rounded-xl border shadow-md shadow-black/10">
@@ -167,17 +202,18 @@ export function DestinationAutocomplete({
             {predictions.map((item, index) => (
               <Pressable
                 key={item.placeId}
-                onPress={() =>
-                  void onSelectPrediction(item.placeId, item.description)
-                }
-                className={[
+                onPress={() => {
+                  void onSelectPrediction(item.placeId, item.description);
+                }}
+                className={cn(
                   "active:bg-accent/70 px-4 py-3",
                   index < predictions.length - 1
                     ? "border-border/50 border-b"
-                    : "",
-                ].join(" ")}
+                    : ""
+                )}
               >
                 <Text className="text-sm font-medium">{item.mainText}</Text>
+
                 {item.secondaryText ? (
                   <Text variant="muted" className="mt-0.5 text-xs">
                     {item.secondaryText}
