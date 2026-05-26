@@ -104,12 +104,11 @@ function DropdownMenuContent({
         <DropdownMenuPrimitive.Overlay
           style={Platform.select({
             web: overlayStyle ?? undefined,
-            native: overlayStyle
-              ? StyleSheet.flatten([
-                StyleSheet.absoluteFill,
-                overlayStyle as typeof StyleSheet.absoluteFill,
-              ])
-              : StyleSheet.absoluteFill,
+            native: StyleSheet.flatten([
+              StyleSheet.absoluteFill,
+              { zIndex: 1, elevation: 1 },
+              overlayStyle,
+            ]),
           })}
           className={overlayClassName}>
           <NativeOnlyAnimatedView entering={FadeIn}>
@@ -123,9 +122,14 @@ function DropdownMenuContent({
                       props.side === 'bottom' && 'slide-in-from-top-2',
                       props.side === 'top' && 'slide-in-from-bottom-2'
                     ),
+                    native: 'z-[2]',
                   }),
                   className
                 )}
+                style={Platform.select({
+                  native: { zIndex: 2, elevation: 2 },
+                  default: undefined,
+                })}
                 {...props}
               />
             </TextClassContext.Provider>

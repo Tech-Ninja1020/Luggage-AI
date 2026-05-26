@@ -1,7 +1,7 @@
 import DateTimePicker from "@expo/ui/datetimepicker";
 import { CalendarDays } from "lucide-react-native";
 import { useState } from "react";
-import { Pressable, View } from "react-native";
+import { Platform, Pressable, View } from "react-native";
 
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
@@ -46,27 +46,54 @@ export function DatePickerField({
         {label}
       </Text>
 
-      <Pressable
-        onPress={() => setShowPicker(true)}
-        accessibilityRole="button"
-        accessibilityLabel={`${label}, ${displayText}`}
-        className={cn(
-          "border-input bg-background active:bg-accent/40 h-12 flex-row items-center justify-between rounded-xl border px-3 shadow-sm shadow-black/5"
-        )}
-      >
-        <Text
+      <View className="relative">
+        <Pressable
+          onPress={() => {
+            if (Platform.OS !== "ios") {
+              setShowPicker(true);
+            }
+          }}
+          accessibilityRole="button"
+          accessibilityLabel={`${label}, ${displayText}`}
           className={cn(
-            "text-base",
-            selectedDate ? "text-foreground" : "text-muted-foreground"
+            "border-input bg-background active:bg-accent/40 h-12 flex-row items-center justify-between rounded-xl border px-3 shadow-sm shadow-black/5"
           )}
         >
-          {displayText}
-        </Text>
+          <Text
+            className={cn(
+              "text-base",
+              selectedDate ? "text-foreground" : "text-muted-foreground"
+            )}
+          >
+            {displayText}
+          </Text>
 
-        <Icon as={CalendarDays} size={18} className="text-muted-foreground" />
-      </Pressable>
+          <Icon as={CalendarDays} size={18} className="text-muted-foreground" />
+        </Pressable>
 
-      {showPicker ? (
+        {Platform.OS === "ios" ? (
+          <View
+            className="absolute inset-0 z-10"
+            style={{
+              opacity: 0.02,
+            }}
+          >
+            <DateTimePicker
+              value={pickerValue}
+              mode="date"
+              minimumDate={minimumDate}
+              maximumDate={maximumDate}
+              onValueChange={(_event, selectedDate) => {
+                if (selectedDate) {
+                  onChange(dateToISODateString(selectedDate));
+                }
+              }}
+            />
+          </View>
+        ) : null}
+      </View>
+
+      {Platform.OS !== "ios" && showPicker ? (
         <DateTimePicker
           value={pickerValue}
           mode="date"
@@ -75,7 +102,10 @@ export function DatePickerField({
           presentation="dialog"
           onValueChange={(_event, selectedDate) => {
             setShowPicker(false);
-            onChange(dateToISODateString(selectedDate));
+
+            if (selectedDate) {
+              onChange(dateToISODateString(selectedDate));
+            }
           }}
           onDismiss={() => {
             setShowPicker(false);

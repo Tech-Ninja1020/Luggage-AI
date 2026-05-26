@@ -1,3 +1,7 @@
+import {
+  createPackingListForTrip,
+  packingListNameFromDestination,
+} from "@/lib/services/packing";
 import { supabase } from "@/lib/supabase";
 import type { TripDestination } from "@/lib/types/destination";
 import type { ActivityOptionRow, TripListItem } from "@/lib/types/trips";
@@ -83,6 +87,18 @@ export async function createTrip(
   }
 
   const tripId = trip.id as string;
+
+  const listName = packingListNameFromDestination(dest.name, dest.city);
+  const { error: packingError } = await createPackingListForTrip(
+    tripId,
+    input.userId,
+    listName
+  );
+
+  if (packingError) {
+    await supabase.from("trips").delete().eq("id", tripId);
+    return { tripId: null, error: packingError };
+  }
 
   const uniqueActivityIds = [...new Set(input.activityIds)];
 

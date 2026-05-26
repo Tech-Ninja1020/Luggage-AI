@@ -211,6 +211,16 @@ export default function HomeScreen() {
             const subtitle = formatTripDateRange(item.start_date, item.end_date);
             const n = item.trip_activities?.length ?? 0;
             return (
+              <Pressable
+                onPress={() =>
+                  router.push({
+                    pathname: "/packing",
+                    params: { tripId: item.id },
+                  } as Href)
+                }
+                accessibilityRole="button"
+                accessibilityLabel={`Open packing list for ${title}`}
+              >
               <Card className="border-border/70 rounded-2xl py-0 shadow-sm shadow-black/5">
                 <CardContent className="flex-row items-center gap-3 px-4 py-4">
                   <View className="bg-primary/10 size-12 items-center justify-center rounded-xl">
@@ -257,6 +267,7 @@ export default function HomeScreen() {
                   />
                 </CardContent>
               </Card>
+              </Pressable>
             );
           }}
         />
