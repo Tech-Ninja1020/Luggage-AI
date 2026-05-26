@@ -1,3 +1,4 @@
+import { buildTravelerProfile, fetchProfileForUser } from "@/lib/services/profile";
 import { supabase } from "@/lib/supabase";
 import type {
   TravelOutfitGroup,
@@ -5,6 +6,7 @@ import type {
   TravelOutfitsRequest,
   TravelOutfitsResponse,
 } from "@/lib/types/outfits";
+import type { Gender, OutfitStyle } from "@/lib/types/profile";
 
 const TRAVEL_OUTFITS_FUNCTION = "travel-outfits";
 const DEFAULT_OCCASIONS = ["Travel"];
@@ -127,6 +129,7 @@ export function occasionsFromActivityNames(names: string[]): string[] {
 }
 
 export async function generateAndSaveOutfitsForTrip(input: {
+  userId?: string;
   packingListId: string;
   destinationLabel: string;
   startDate: string | null;
@@ -152,18 +155,26 @@ export async function generateAndSaveOutfitsForTrip(input: {
   );
   const occasions = occasionsFromActivityNames(activityNames);
 
-  const travelerProfile: Record<string, unknown> = {};
-  const notes = input.notes?.trim();
-  if (notes) {
-    travelerProfile.notes = notes;
+  let gender: Gender | null = null;
+  let outfitPreferences: OutfitStyle[] = [];
+  if (input.userId) {
+    const { data: profile } = await fetchProfileForUser(input.userId);
+    gender = profile?.gender ?? null;
+    outfitPreferences = profile?.outfit_preferences ?? [];
   }
+
+  const travelerProfile = buildTravelerProfile({
+    notes: input.notes,
+    gender,
+    outfitPreferences,
+  });
 
   const { data: plan, error: fetchError } = await fetchTravelOutfits({
     destination,
     startDate,
     endDate,
     occasions,
-    travelerProfile: Object.keys(travelerProfile).length > 0 ? travelerProfile : undefined,
+    travelerProfile,
     weatherSummary: null,
   });
 

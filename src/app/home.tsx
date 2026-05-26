@@ -51,7 +51,7 @@ function initials(name: string): string {
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { user, signOut, isLoading, isAuthenticated } = useAuthStore();
+  const { user, isLoading, isAuthenticated } = useAuthStore();
   const [trips, setTrips] = useState<TripListItem[]>([]);
   const [listLoading, setListLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -123,19 +123,26 @@ export default function HomeScreen() {
               My Trips
             </Text>
           </View>
-          <Avatar
-            alt={user.displayName ? `${user.displayName} avatar` : "User avatar"}
-            className="size-9 border-border/80 border shadow-sm"
+          <Pressable
+            onPress={() => router.push("/profile")}
+            accessibilityRole="button"
+            accessibilityLabel="Open profile"
+            className="active:opacity-80"
           >
-            {user.avatarUrl ? (
-              <AvatarImage source={{ uri: user.avatarUrl }} />
-            ) : null}
-            <AvatarFallback>
-              <Text className="text-sm font-semibold">
-                {initials(user.displayName)}
-              </Text>
-            </AvatarFallback>
-          </Avatar>
+            <Avatar
+              alt={user.displayName ? `${user.displayName} avatar` : "User avatar"}
+              className="size-9 border-border/80 border shadow-sm"
+            >
+              {user.avatarUrl ? (
+                <AvatarImage source={{ uri: user.avatarUrl }} />
+              ) : null}
+              <AvatarFallback>
+                <Text className="text-sm font-semibold">
+                  {initials(user.displayName)}
+                </Text>
+              </AvatarFallback>
+            </Avatar>
+          </Pressable>
         </View>
 
       </View>

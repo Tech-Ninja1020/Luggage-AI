@@ -124,6 +124,7 @@ export async function createTrip(
     "Trip destination";
 
   const { error: outfitError } = await generateAndSaveOutfitsForTrip({
+    userId: input.userId,
     packingListId: packingList.id,
     destinationLabel,
     startDate: input.startDate,
