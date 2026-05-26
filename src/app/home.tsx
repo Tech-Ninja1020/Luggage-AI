@@ -119,24 +119,13 @@ export default function HomeScreen() {
       >
         <View className="flex-row items-start justify-between gap-4">
           <View className="min-w-0 flex-1">
-            <Text
-              variant="muted"
-              className="text-xs font-medium uppercase tracking-wider"
-            >
-              Your journeys
-            </Text>
             <Text variant="h3" className="mt-1 truncate tracking-tight">
-              Trips
-            </Text>
-            <Text variant="muted" className="mt-1 max-w-[280px] text-sm">
-              {user.displayName
-                ? `Hi ${user.displayName.split(" ")[0]} — plan packs by destination and dates.`
-                : "Plan packs by destination and dates."}
+              My Trips
             </Text>
           </View>
           <Avatar
             alt={user.displayName ? `${user.displayName} avatar` : "User avatar"}
-            className="size-11 border-border/80 border shadow-sm"
+            className="size-9 border-border/80 border shadow-sm"
           >
             {user.avatarUrl ? (
               <AvatarImage source={{ uri: user.avatarUrl }} />

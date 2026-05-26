@@ -1,3 +1,4 @@
+import { generateAndSaveOutfitsForTrip } from "@/lib/services/outfits";
 import {
   createPackingListForTrip,
   packingListNameFromDestination,
@@ -89,33 +90,50 @@ export async function createTrip(
   const tripId = trip.id as string;
 
   const listName = packingListNameFromDestination(dest.name, dest.city);
-  const { error: packingError } = await createPackingListForTrip(
+  const { data: packingList, error: packingError } = await createPackingListForTrip(
     tripId,
     input.userId,
     listName
   );
 
-  if (packingError) {
+  if (packingError || !packingList) {
     await supabase.from("trips").delete().eq("id", tripId);
     return { tripId: null, error: packingError };
   }
 
   const uniqueActivityIds = [...new Set(input.activityIds)];
 
-  if (uniqueActivityIds.length === 0) {
-    return { tripId, error: null };
+  if (uniqueActivityIds.length > 0) {
+    const rows = uniqueActivityIds.map((activity_id) => ({
+      trip_id: tripId,
+      activity_id,
+    }));
+
+    const { error: linkError } = await supabase.from("trip_activities").insert(rows);
+
+    if (linkError) {
+      await supabase.from("trips").delete().eq("id", tripId);
+      return { tripId: null, error: new Error(linkError.message) };
+    }
   }
 
-  const rows = uniqueActivityIds.map((activity_id) => ({
-    trip_id: tripId,
-    activity_id,
-  }));
+  const destinationLabel =
+    dest.name?.trim() ||
+    dest.city?.trim() ||
+    dest.formattedAddress?.trim() ||
+    "Trip destination";
 
-  const { error: linkError } = await supabase.from("trip_activities").insert(rows);
+  const { error: outfitError } = await generateAndSaveOutfitsForTrip({
+    packingListId: packingList.id,
+    destinationLabel,
+    startDate: input.startDate,
+    endDate: input.endDate,
+    activityIds: uniqueActivityIds,
+    notes: input.notes,
+  });
 
-  if (linkError) {
-    await supabase.from("trips").delete().eq("id", tripId);
-    return { tripId: null, error: new Error(linkError.message) };
+  if (outfitError) {
+    console.warn("Outfit recommendations could not be saved:", outfitError.message);
   }
 
   return { tripId, error: null };
