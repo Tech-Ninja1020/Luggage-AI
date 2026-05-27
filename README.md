@@ -58,8 +58,8 @@ Join our community of developers creating universal apps.
 
 ## About project
 
-Welcome to Luggage AI — your intelligent travel packing companion designed to eliminate the stress of trip preparation. Luggage AI combines AI-powered outfit planning, smart packing checklists, and airline baggage guidance into one seamless experience, helping travelers pack confidently, efficiently, and without surprises.
+Welcome to Attire — your intelligent travel packing companion designed to eliminate the stress of trip preparation. Attire combines AI-powered outfit planning, smart packing checklists, and airline baggage guidance into one seamless experience, helping travelers pack confidently, efficiently, and without surprises.
 
-Simply enter your destination, trip dates, and planned activities, and Luggage AI generates personalized outfit recommendations tailored to your travel style, weather, and occasions. As you pack, interactive checklists keep every item organized so nothing gets left behind.
+Simply enter your destination, trip dates, and planned activities, and Attire generates personalized outfit recommendations tailored to your travel style, weather, and occasions. As you pack, interactive checklists keep every item organized so nothing gets left behind.
 
-Built for frequent travelers who value convenience, organization, and style, Luggage AI transforms chaotic pre-trip planning into a fast, effortless workflow — saving time, reducing overpacking, and helping users avoid unexpected baggage fees before they even leave home.
+Built for frequent travelers who value convenience, organization, and style, Attire transforms chaotic pre-trip planning into a fast, effortless workflow — saving time, reducing overpacking, and helping users avoid unexpected baggage fees before they even leave home.

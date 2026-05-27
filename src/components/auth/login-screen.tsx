@@ -1,15 +1,15 @@
 import {
-  GoogleSignin,
-  isSuccessResponse,
-  statusCodes,
+    GoogleSignin,
+    isSuccessResponse,
+    statusCodes,
 } from "@react-native-google-signin/google-signin";
 import { Luggage } from "lucide-react-native";
 import { useEffect } from "react";
 import {
-  ActivityIndicator,
-  Pressable,
-  View,
-  useColorScheme
+    ActivityIndicator,
+    Pressable,
+    View,
+    useColorScheme
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -102,7 +102,20 @@ export function LoginScreen() {
               variant="h1"
               className="mb-2 text-center text-[32px] font-bold tracking-tight"
             >
-              Luggage AI
+              <Text
+                variant="h1"
+                className="text-[32px] font-bold tracking-tight text-[#208AEF]"
+              >
+                {'A'}
+              </Text>
+              {'tt'}
+              <Text
+                variant="h1"
+                className="text-[32px] font-bold tracking-tight text-[#208AEF]"
+              >
+                {'i'}
+              </Text>
+              {'re'}
             </Text>
             <Text
               variant="muted"

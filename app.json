@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Luggage AI",
-    "slug": "luggage-ai",
+    "name": "Attire",
+    "slug": "attire",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "luggageai",
+    "scheme": "attire",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"
@@ -19,7 +19,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.luggageai.app"
+      "package": "com.attire.app"
     },
     "web": {
       "output": "static",
