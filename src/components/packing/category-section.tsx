@@ -1,3 +1,4 @@
+import { CategoryIcon } from "@/components/packing/category-icon";
 import { PackingItemRowView } from "@/components/packing/item-row";
 import {
   Accordion,
@@ -138,20 +139,19 @@ export function CategorySection({
         }
       >
         <View className="flex-row items-center justify-between gap-2">
-          <Text className="min-w-0 flex-1 text-base font-semibold tracking-tight">
-            {category.name}
-          </Text>
+          <View className="min-w-0 flex-1 flex-row items-center gap-2">
+            <CategoryIcon name={category.name} />
+            <Text className="min-w-0 flex-1 text-base font-semibold tracking-tight">
+              {category.name}
+            </Text>
+          </View>
           <Text variant="muted" className="shrink-0 text-base font-semibold tabular-nums">
             {packed}/{total}
           </Text>
         </View>
       </CategoryAccordionHeader>
       <AccordionContent className="px-3 pb-2">
-        {items.length === 0 ? (
-          <Text variant="muted" className="px-1 py-2 text-center text-sm">
-            No items yet
-          </Text>
-        ) : (
+        {items.length !== 0 && (
           <View className="gap-0.5">
             {items.map((item) => (
               <PackingItemRowView
