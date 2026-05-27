@@ -86,6 +86,7 @@ export default function PackingManagementScreen() {
   const [editingCategory, setEditingCategory] = useState<PackingCategoryWithItems | null>(null);
   const [addItemOpen, setAddItemOpen] = useState(false);
   const [addItemCategoryId, setAddItemCategoryId] = useState<string | null>(null);
+  const [addItemShowCategoryPicker, setAddItemShowCategoryPicker] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteCategoryDialogOpen, setDeleteCategoryDialogOpen] = useState(false);
   const [deletingCategory, setDeletingCategory] = useState<PackingCategoryWithItems | null>(null);
@@ -469,10 +470,26 @@ export default function PackingManagementScreen() {
     [list?.packing_categories, updateCategories]
   );
 
-  const openAddItem = useCallback((categoryId: string | null) => {
-    setAddItemCategoryId(categoryId);
-    setAddItemOpen(true);
-  }, []);
+  const openAddItem = useCallback(
+    (categoryId: string | null, showCategoryPicker = false) => {
+      setAddItemCategoryId(categoryId);
+      setAddItemShowCategoryPicker(showCategoryPicker);
+      setAddItemOpen(true);
+    },
+    []
+  );
+
+  const requestAddItemFromFooter = useCallback(() => {
+    if (categories.length === 0) {
+      Alert.alert("Add a category first", "Create a category before adding items.", [
+        { text: "Cancel", style: "cancel" },
+        { text: "Add category", onPress: () => setAddCategoryOpen(true) },
+      ]);
+      return;
+    }
+
+    openAddItem(null, true);
+  }, [categories.length, openAddItem]);
 
   const liveSelectedItem = selectedItem
     ? findItem(selectedItem.id) ?? selectedItem
@@ -615,7 +632,7 @@ export default function PackingManagementScreen() {
           <Text className="text-sm font-semibold">Category</Text>
         </Pressable>
         <Pressable
-          onPress={() => openAddItem(categories[0]?.id ?? null)}
+          onPress={requestAddItemFromFooter}
           className="bg-primary flex-1 flex-row items-center justify-center gap-2 rounded-xl py-3 active:bg-primary/90"
           accessibilityRole="button"
           accessibilityLabel="Add item"
@@ -686,6 +703,7 @@ export default function PackingManagementScreen() {
         onOpenChange={setAddItemOpen}
         categoryId={addItemCategoryId}
         categories={categories}
+        showCategoryPicker={addItemShowCategoryPicker}
         onAdd={handleAddItem}
       />
 
