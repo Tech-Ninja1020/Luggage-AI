@@ -28,6 +28,7 @@ import {
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { formatTripDateRange } from "@/lib/format/trip-dates";
+import { tripPackingProgress } from "@/lib/packing/utils";
 import { fetchTripsForUser } from "@/lib/services/trips";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import type { TripListItem } from "@/lib/types/trips";
@@ -205,7 +206,7 @@ export default function HomeScreen() {
           renderItem={({ item }) => {
             const title = tripTitle(item);
             const subtitle = formatTripDateRange(item.start_date, item.end_date);
-            const n = item.trip_activities?.length ?? 0;
+            const { total, percent } = tripPackingProgress(item.packing_lists);
             return (
               <Pressable
                 onPress={() =>
@@ -237,24 +238,12 @@ export default function HomeScreen() {
                           {subtitle}
                         </Text>
                       </View>
-                      {n > 0 ? (
-                        <View className="bg-secondary/90 rounded-full px-2.5 py-0.5">
-                          <Text className="text-secondary-foreground text-[11px] font-medium">
-                            {n} activit{n === 1 ? "y" : "ies"}
-                          </Text>
-                        </View>
-                      ) : null}
+                      <View className="py-0.5">
+                        <Text className="text-secondary-foreground text-[11px] font-medium">
+                          {total} {total === 1 ? "item" : "items"} · {percent}% packed
+                        </Text>
+                      </View>
                     </View>
-                    {item.destination_formatted_address &&
-                    item.destination_formatted_address !== title ? (
-                      <Text
-                        variant="muted"
-                        className="mt-1 text-xs leading-snug"
-                        numberOfLines={1}
-                      >
-                        {item.destination_formatted_address}
-                      </Text>
-                    ) : null}
                   </View>
                   <Icon
                     as={ChevronRight}

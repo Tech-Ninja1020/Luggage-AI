@@ -1,4 +1,17 @@
 import type { PackingCategoryWithItems, PackingItemRow } from "@/lib/types/packing";
+import type { TripListItem } from "@/lib/types/trips";
+
+export function tripPackingProgress(
+  packingLists: TripListItem["packing_lists"] | undefined
+): { packed: number; total: number; percent: number } {
+  const items = (packingLists ?? []).flatMap((list) =>
+    (list.packing_categories ?? []).flatMap((cat) => cat.packing_items ?? [])
+  );
+  const total = items.length;
+  const packed = items.filter((i) => i.is_packed).length;
+  const percent = total === 0 ? 0 : Math.round((packed / total) * 100);
+  return { packed, total, percent };
+}
 
 export function categoryProgress(category: PackingCategoryWithItems): {
   packed: number;

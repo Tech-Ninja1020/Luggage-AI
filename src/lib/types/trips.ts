@@ -33,7 +33,11 @@ export type ActivityOptionRow = {
   created_at: string;
 };
 
-/** Trip with nested `trip_activities` from a PostgREST select. */
+/** Trip with nested packing list summary from a PostgREST select. */
 export type TripListItem = TripRow & {
-  trip_activities: { id: string }[];
+  packing_lists: {
+    packing_categories: {
+      packing_items: { id: string; is_packed: boolean }[];
+    }[];
+  }[];
 };

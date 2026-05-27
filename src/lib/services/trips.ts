@@ -12,7 +12,14 @@ export async function fetchTripsForUser(
 ): Promise<{ data: TripListItem[] | null; error: Error | null }> {
   const { data, error } = await supabase
     .from("trips")
-    .select("*, trip_activities ( id )")
+    .select(
+      `*,
+      packing_lists (
+        packing_categories (
+          packing_items ( id, is_packed )
+        )
+      )`
+    )
     .eq("user_id", userId)
     .order("start_date", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false });
