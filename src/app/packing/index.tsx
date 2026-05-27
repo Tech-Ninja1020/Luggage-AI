@@ -1,6 +1,6 @@
 import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { ArrowLeft, FolderPlus, Package } from "lucide-react-native";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -28,8 +28,9 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Progress } from "@/components/ui/progress";
+import { Snackbar } from "@/components/ui/snackbar";
 import { Text } from "@/components/ui/text";
-import { listProgress, sortCategories } from "@/lib/packing/utils";
+import { listProgress, sortCategories, sortItems } from "@/lib/packing/utils";
 import { TOP_OVERLAY_PORTAL_HOST } from "@/lib/portal-hosts";
 import {
   deletePackingCategory,
@@ -47,6 +48,13 @@ import type {
   PackingListWithCategories,
 } from "@/lib/types/packing";
 import { cn } from "@/lib/utils";
+
+const UNDO_DELAY_MS = 5000;
+
+type PendingItemDelete = {
+  item: PackingItemRow;
+  categoryId: string;
+};
 
 function showPersistError(message: string) {
   Alert.alert("Could not save", message);
@@ -81,6 +89,9 @@ export default function PackingManagementScreen() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteCategoryDialogOpen, setDeleteCategoryDialogOpen] = useState(false);
   const [deletingCategory, setDeletingCategory] = useState<PackingCategoryWithItems | null>(null);
+  const [undoSnackbar, setUndoSnackbar] = useState<{ message: string } | null>(null);
+  const pendingDeleteRef = useRef<PendingItemDelete | null>(null);
+  const undoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadList = useCallback(async () => {
     if (!tripId || !userId) {
@@ -158,6 +169,89 @@ export default function PackingManagementScreen() {
     },
     [list?.packing_categories]
   );
+
+  const findCategoryIdForItem = useCallback(
+    (itemId: string): string | undefined => {
+      for (const cat of list?.packing_categories ?? []) {
+        if (cat.packing_items.some((i) => i.id === itemId)) {
+          return cat.id;
+        }
+      }
+      return undefined;
+    },
+    [list?.packing_categories]
+  );
+
+  const clearUndoTimeout = useCallback(() => {
+    if (undoTimeoutRef.current) {
+      clearTimeout(undoTimeoutRef.current);
+      undoTimeoutRef.current = null;
+    }
+  }, []);
+
+  const restorePendingItem = useCallback(
+    (pending: PendingItemDelete) => {
+      updateCategories((cats) =>
+        cats.map((cat) =>
+          cat.id === pending.categoryId
+            ? {
+                ...cat,
+                packing_items: sortItems([...cat.packing_items, pending.item]),
+              }
+            : cat
+        )
+      );
+    },
+    [updateCategories]
+  );
+
+  const flushPendingDelete = useCallback(() => {
+    clearUndoTimeout();
+    const pending = pendingDeleteRef.current;
+    if (!pending) return;
+    pendingDeleteRef.current = null;
+
+    void (async () => {
+      const { error } = await deletePackingItem(pending.item.id);
+      if (error) {
+        restorePendingItem(pending);
+        showPersistError(error.message);
+      }
+    })();
+  }, [clearUndoTimeout, restorePendingItem]);
+
+  const schedulePendingDeleteCommit = useCallback(() => {
+    clearUndoTimeout();
+    undoTimeoutRef.current = setTimeout(() => {
+      setUndoSnackbar(null);
+      flushPendingDelete();
+    }, UNDO_DELAY_MS);
+  }, [clearUndoTimeout, flushPendingDelete]);
+
+  useEffect(() => {
+    return () => {
+      clearUndoTimeout();
+      const pending = pendingDeleteRef.current;
+      if (pending) {
+        pendingDeleteRef.current = null;
+        void deletePackingItem(pending.item.id);
+      }
+    };
+  }, [clearUndoTimeout]);
+
+  const handleUndoDelete = useCallback(() => {
+    const pending = pendingDeleteRef.current;
+    if (!pending) return;
+
+    clearUndoTimeout();
+    pendingDeleteRef.current = null;
+    setUndoSnackbar(null);
+    restorePendingItem(pending);
+
+    if (selectedItem?.id === pending.item.id) {
+      setSelectedItem(pending.item);
+    }
+  }, [clearUndoTimeout, restorePendingItem, selectedItem?.id]);
 
   const handleTogglePacked = useCallback(
     (itemId: string, packed: boolean) => {
@@ -241,33 +335,45 @@ export default function PackingManagementScreen() {
     setDeleteDialogOpen(true);
   }, []);
 
+  const handleDeleteItem = useCallback(
+    (itemId: string) => {
+      const item = findItem(itemId);
+      const categoryId = findCategoryIdForItem(itemId);
+      if (!item || !categoryId) return;
+
+      flushPendingDelete();
+
+      updateCategories((cats) =>
+        cats.map((cat) => ({
+          ...cat,
+          packing_items: cat.packing_items.filter((i) => i.id !== itemId),
+        }))
+      );
+
+      if (selectedItem?.id === itemId) {
+        setDeleteDialogOpen(false);
+        setDetailOpen(false);
+        setSelectedItem(null);
+      }
+
+      pendingDeleteRef.current = { item, categoryId };
+      setUndoSnackbar({ message: `"${item.name}" removed` });
+      schedulePendingDeleteCommit();
+    },
+    [
+      findCategoryIdForItem,
+      findItem,
+      flushPendingDelete,
+      schedulePendingDeleteCommit,
+      selectedItem?.id,
+      updateCategories,
+    ]
+  );
+
   const runDeleteItem = useCallback(() => {
     if (!selectedItem) return;
-    const itemId = selectedItem.id;
-    const previousCategories = list?.packing_categories;
-
-    updateCategories((cats) =>
-      cats.map((cat) => ({
-        ...cat,
-        packing_items: cat.packing_items.filter((i) => i.id !== itemId),
-      }))
-    );
-    setDeleteDialogOpen(false);
-    setDetailOpen(false);
-    setSelectedItem(null);
-
-    void (async () => {
-      const { error } = await deletePackingItem(itemId);
-      if (error) {
-        if (previousCategories) {
-          setList((prev) =>
-            prev ? { ...prev, packing_categories: previousCategories } : prev
-          );
-        }
-        showPersistError(error.message);
-      }
-    })();
-  }, [list?.packing_categories, selectedItem, updateCategories]);
+    handleDeleteItem(selectedItem.id);
+  }, [handleDeleteItem, selectedItem]);
 
   const handleAddCategory = useCallback(
     (name: string) => {
@@ -491,6 +597,7 @@ export default function PackingManagementScreen() {
           onAddItem={(categoryId) => openAddItem(categoryId)}
           onRenameCategory={requestRenameCategory}
           onDeleteCategory={requestDeleteCategory}
+          onDeleteItem={handleDeleteItem}
         />
       </ScrollView>
 
@@ -540,8 +647,8 @@ export default function PackingManagementScreen() {
             <AlertDialogTitle>Delete item?</AlertDialogTitle>
             <AlertDialogDescription>
               {selectedItem
-                ? `Remove "${selectedItem.name}" from your packing list? This cannot be undone.`
-                : "Remove this item from your packing list?"}
+                ? `Remove "${selectedItem.name}" from your packing list? You can undo for a few seconds afterward.`
+                : "Remove this item from your packing list? You can undo for a few seconds afterward."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -580,6 +687,13 @@ export default function PackingManagementScreen() {
         categoryId={addItemCategoryId}
         categories={categories}
         onAdd={handleAddItem}
+      />
+
+      <Snackbar
+        visible={undoSnackbar !== null}
+        message={undoSnackbar?.message ?? ""}
+        onAction={handleUndoDelete}
+        bottomInset={insets.bottom + 80}
       />
 
       <AlertDialog

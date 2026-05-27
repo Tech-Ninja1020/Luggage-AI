@@ -18,8 +18,10 @@ import type { PackingCategoryWithItems, PackingItemRow } from "@/lib/types/packi
 import { cn } from "@/lib/utils";
 import * as AccordionPrimitive from "@rn-primitives/accordion";
 import { MoreVertical, Pencil, Plus, Trash2 } from "lucide-react-native";
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
+import { useCallback, useRef } from "react";
 import { Platform, Pressable, View } from "react-native";
+import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 
 type CategorySectionProps = {
   category: PackingCategoryWithItems;
@@ -28,6 +30,7 @@ type CategorySectionProps = {
   onAddItem: (categoryId: string) => void;
   onRenameCategory: (category: PackingCategoryWithItems) => void;
   onDeleteCategory: (category: PackingCategoryWithItems) => void;
+  onDeleteItem: (itemId: string) => void;
 };
 
 function CategoryOptionsMenu({
@@ -104,9 +107,22 @@ export function CategorySection({
   onAddItem,
   onRenameCategory,
   onDeleteCategory,
+  onDeleteItem,
 }: CategorySectionProps) {
   const { packed, total } = categoryProgress(category);
   const items = sortItems(category.packing_items);
+  const openedSwipeableRef = useRef<SwipeableMethods | null>(null);
+
+  const handleSwipeableWillOpen = useCallback(() => {
+    openedSwipeableRef.current?.close();
+  }, []);
+
+  const handleSwipeableOpen = useCallback(
+    (ref: RefObject<SwipeableMethods | null>) => {
+      openedSwipeableRef.current = ref.current;
+    },
+    []
+  );
 
   return (
     <AccordionItem
@@ -143,6 +159,9 @@ export function CategorySection({
                 item={item}
                 onTogglePacked={(packed) => onToggleItemPacked(item.id, packed)}
                 onPress={() => onItemPress(item)}
+                onDelete={() => onDeleteItem(item.id)}
+                onSwipeableWillOpen={handleSwipeableWillOpen}
+                onSwipeableOpen={handleSwipeableOpen}
               />
             ))}
           </View>
@@ -171,6 +190,7 @@ export function CategoryAccordion({
   onAddItem,
   onRenameCategory,
   onDeleteCategory,
+  onDeleteItem,
 }: {
   categories: PackingCategoryWithItems[];
   defaultOpenIds: string[];
@@ -179,6 +199,7 @@ export function CategoryAccordion({
   onAddItem: (categoryId: string) => void;
   onRenameCategory: (category: PackingCategoryWithItems) => void;
   onDeleteCategory: (category: PackingCategoryWithItems) => void;
+  onDeleteItem: (itemId: string) => void;
 }) {
   return (
     <Accordion type="multiple" defaultValue={defaultOpenIds} className="w-full">
@@ -191,6 +212,7 @@ export function CategoryAccordion({
           onAddItem={onAddItem}
           onRenameCategory={onRenameCategory}
           onDeleteCategory={onDeleteCategory}
+          onDeleteItem={onDeleteItem}
         />
       ))}
     </Accordion>
